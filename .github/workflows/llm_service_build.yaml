@@ -1,0 +1,42 @@
+name: BUILD llm_service
+
+on:
+  push:
+    paths:
+      - 'llm_service/**'
+  workflow_dispatch: 
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v2
+
+    - name: Login to GitHub Packages Docker registry
+      uses: docker/login-action@v1
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Build and push Docker image CPU
+      uses: docker/build-push-action@v6
+      with:
+        context: llm_service
+        push: true
+        file: Dockerfile.cpu
+        tags: ghcr.io/${{ github.repository }}/llm_service:cpu
+
+    - name: Build and push Docker image GPU
+      uses: docker/build-push-action@v6
+      with:
+        context: llm_service
+        push: true
+        file: Dockerfile.gpu
+        tags: ghcr.io/${{ github.repository }}/llm_service:gpu
