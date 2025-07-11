@@ -19,7 +19,7 @@ ENV PATH="/root/.local/bin:$PATH"
 COPY pyproject.toml uv.lock* ./
 
 # Install Python dependencies using uv (CPU version by default)
-RUN uv sync --extra cpu --frozen --no-dev
+RUN uv sync --extra cpu --no-dev
 
 # Copy application code
 COPY . .

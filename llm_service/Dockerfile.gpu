@@ -23,7 +23,7 @@ RUN ln -s /usr/bin/python3 /usr/bin/python
 COPY pyproject.toml uv.lock* ./
 
 # Install Python dependencies using uv (GPU version)
-RUN uv sync --extra gpu-cuda128 --frozen --no-dev
+RUN uv sync --extra gpu-cuda128 --no-dev
 
 # Copy application code
 COPY . .
