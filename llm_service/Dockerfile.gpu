@@ -15,8 +15,8 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/* \
     && curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# Add uv to PATH and create python symlink
-ENV PATH="/root/.cargo/bin:$PATH"
+# Add uv to PATH and create python symlink (updated path for newer versions)
+ENV PATH="/root/.local/bin:$PATH"
 RUN ln -s /usr/bin/python3 /usr/bin/python
 
 # Copy project files
