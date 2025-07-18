@@ -68,6 +68,10 @@ echo "  - Supervisor messages will be prefixed with supervisord"
 echo "  - Nginx messages will appear directly"
 echo "  - Reflex backend messages will appear directly"
 echo ""
+echo "WebSocket endpoint will be available at:"
+echo "  - Internal: http://localhost:8000/_event"
+echo "  - External: https://your-domain/_event (via nginx proxy)"
+echo ""
 echo "========================================================================================"
 
 # Start supervisor with all output going to stdout/stderr
