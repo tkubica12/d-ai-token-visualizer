@@ -1,11 +1,15 @@
 #!/bin/bash
 
+# Set Reflex environment
+export REFLEX_ENV=prod
+
 echo "========================================================================================"
 echo "=== STARTING TOKEN VISUALIZER ==="
 echo "========================================================================================"
 echo "Container started at: $(date)"
 echo "Environment variables:"
 echo "  LLM_SERVICE_URL: ${LLM_SERVICE_URL}"
+echo "  REFLEX_ENV: ${REFLEX_ENV}"
 echo "  PWD: $(pwd)"
 echo "  PATH: ${PATH}"
 echo ""
