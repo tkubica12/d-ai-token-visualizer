@@ -47,6 +47,7 @@ RUN chmod +x /health_check.sh
 
 # Set environment variables
 ENV LLM_SERVICE_URL=http://localhost:8001
+ENV DEBUG=true
 
 # Expose port 80 (nginx will handle routing)
 EXPOSE 80
