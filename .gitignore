@@ -169,7 +169,6 @@ reflex.db
 
 # UV specific
 .uv/
-uv.lock
 
 # Node modules (Reflex may generate these)
 node_modules/

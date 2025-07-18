@@ -31,5 +31,5 @@ COPY . .
 # Expose port
 EXPOSE 8001
 
-# Run the application using uv
-CMD ["uv", "run", "main.py"]
+# Run the application using uv with full path
+CMD ["/root/.local/bin/uv", "run", "main.py"]
