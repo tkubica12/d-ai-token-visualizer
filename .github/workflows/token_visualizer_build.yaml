@@ -25,18 +25,9 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Build and push Frontend image
+    - name: Build and push Docker image
       uses: docker/build-push-action@v6
       with:
         context: token_visualizer
         push: true
-        file: token_visualizer/Dockerfile.frontend
-        tags: ghcr.io/${{ github.repository }}/token_visualizer_frontend:latest
-
-    - name: Build and push Backend image
-      uses: docker/build-push-action@v6
-      with:
-        context: token_visualizer
-        push: true
-        file: token_visualizer/Dockerfile.backend
-        tags: ghcr.io/${{ github.repository }}/token_visualizer_backend:latest
+        tags: ghcr.io/${{ github.repository }}/token_visualizer:latest
