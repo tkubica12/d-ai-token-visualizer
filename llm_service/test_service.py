@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Test script for the Local LLM Service."""
 
+import argparse
 import asyncio
 import httpx
 import time
@@ -104,6 +105,43 @@ class LLMServiceTester:
             print(f"   ❌ Service test failed: {e}")
             return {"success": False, "error": str(e)}
     
+    async def test_performance(self) -> Dict[str, Any]:
+        """Test generation performance with longer text."""
+        print("⚡ Testing performance (100 tokens)...")
+        try:
+            payload = {
+                "prompt": "Write a detailed story about artificial intelligence:",
+                "max_tokens": 100,
+                "temperature": 0.7,
+                "top_logprobs": 1  # Only need top choice for performance test
+            }
+            
+            start_time = time.time()
+            response = await self.client.post(
+                f"{self.base_url}/api/v1/generate",
+                json=payload
+            )
+            generation_time = time.time() - start_time
+            
+            result = response.json()
+            print(f"   Status: {response.status_code}")
+            
+            if response.status_code == 200:
+                generated_text = result.get('generated_text', '')
+                char_count = len(generated_text)
+                tokens_per_second = 100 / generation_time if generation_time > 0 else 0
+                
+                print(f"   Generation time: {generation_time:.2f}s")
+                print(f"   Tokens per second: {tokens_per_second:.2f}")
+                print(f"   Characters generated: {char_count}")
+            else:
+                print(f"   ❌ Error: {result}")
+            
+            return {"success": response.status_code == 200, "data": result}
+        except Exception as e:
+            print(f"   ❌ Performance test failed: {e}")
+            return {"success": False, "error": str(e)}
+    
     async def run_all_tests(self):
         """Run all tests."""
         print("🚀 Starting Local LLM Service Tests")
@@ -136,13 +174,25 @@ class LLMServiceTester:
         await self.test_generation()
         print()
         
+        # Test performance
+        await self.test_performance()
+        print()
+        
         print("✅ All tests completed!")
         await self.client.aclose()
 
 
 async def main():
     """Main test function."""
-    tester = LLMServiceTester()
+    parser = argparse.ArgumentParser(description="Test the Local LLM Service")
+    parser.add_argument(
+        "--url", 
+        default="http://localhost:8001", 
+        help="Base URL for the LLM service (default: http://localhost:8001)"
+    )
+    args = parser.parse_args()
+    
+    tester = LLMServiceTester(base_url=args.url)
     await tester.run_all_tests()
 
 
