@@ -10,6 +10,8 @@ RUN apt-get update && apt-get install -y \
     unzip \
     nginx \
     supervisor \
+    net-tools \
+    procps \
     && rm -rf /var/lib/apt/lists/* \
     && curl -LsSf https://astral.sh/uv/install.sh | sh
 

@@ -1,46 +1,28 @@
 #!/bin/bash
 
-echo "=== Health Check ==="
+echo "========================================================================================"
+echo "=== HEALTH CHECK REPORT ==="
+echo "========================================================================================"
 echo "Date: $(date)"
 echo ""
 
-echo "=== Process Status ==="
+echo "=== PROCESS STATUS ==="
+echo "All processes:"
+ps aux
+echo ""
+echo "Filtered processes (nginx, reflex, supervisord):"
 ps aux | grep -E "(nginx|reflex|supervisord)" | grep -v grep
 echo ""
 
-echo "=== Port Status ==="
-netstat -tlnp | grep -E "(80|8000)"
+echo "=== PORT STATUS ==="
+echo "Listening ports:"
+netstat -tlnp 2>/dev/null || ss -tlnp 2>/dev/null || echo "No netstat/ss available"
+echo ""
+echo "Filtered ports (80, 8000):"
+netstat -tlnp 2>/dev/null | grep -E "(80|8000)" || ss -tlnp 2>/dev/null | grep -E "(80|8000)" || echo "No matching ports found"
 echo ""
 
-echo "=== Log Files ==="
-echo "Supervisor logs:"
-if [ -f /var/log/supervisord.log ]; then
-    echo "Last 10 lines of supervisord.log:"
-    tail -10 /var/log/supervisord.log
-else
-    echo "No supervisord.log found"
-fi
-
-echo ""
-echo "Nginx logs:"
-if [ -f /var/log/nginx.out.log ]; then
-    echo "Last 10 lines of nginx.out.log:"
-    tail -10 /var/log/nginx.out.log
-else
-    echo "No nginx.out.log found"
-fi
-
-echo ""
-echo "Reflex logs:"
-if [ -f /var/log/reflex.out.log ]; then
-    echo "Last 10 lines of reflex.out.log:"
-    tail -10 /var/log/reflex.out.log
-else
-    echo "No reflex.out.log found"
-fi
-
-echo ""
-echo "=== Directory Contents ==="
+echo "=== DIRECTORY CONTENTS ==="
 echo "Contents of /app:"
 ls -la /app/
 echo ""
@@ -48,16 +30,47 @@ echo "Contents of /app/.web (if exists):"
 if [ -d /app/.web ]; then
     ls -la /app/.web/
     if [ -d /app/.web/_static ]; then
+        echo ""
         echo "Contents of /app/.web/_static:"
         ls -la /app/.web/_static/
+        echo ""
+        echo "Sample static files:"
+        find /app/.web/_static -type f | head -10
     fi
 else
     echo "No .web directory found"
 fi
 echo ""
 
-echo "=== Environment Variables ==="
-env | grep -E "(LLM_SERVICE_URL|PATH)" | sort
+echo "=== ENVIRONMENT VARIABLES ==="
+echo "All environment variables:"
+env | sort
 echo ""
 
-echo "=== End Health Check ==="
+echo "=== CONFIGURATION FILES ==="
+echo "Nginx configuration:"
+cat /etc/nginx/sites-available/default
+echo ""
+echo "Supervisor configuration:"
+cat /etc/supervisor/conf.d/supervisord.conf
+echo ""
+
+echo "=== CONNECTIVITY TESTS ==="
+echo "Testing localhost:8000 (Reflex backend):"
+curl -s -o /dev/null -w "HTTP Status: %{http_code}\n" http://localhost:8000/ping 2>/dev/null || echo "Connection failed"
+echo ""
+echo "Testing localhost:80 (Nginx):"
+curl -s -o /dev/null -w "HTTP Status: %{http_code}\n" http://localhost:80/ 2>/dev/null || echo "Connection failed"
+echo ""
+
+echo "=== SYSTEM RESOURCES ==="
+echo "Memory usage:"
+free -h 2>/dev/null || echo "free command not available"
+echo ""
+echo "Disk usage:"
+df -h 2>/dev/null || echo "df command not available"
+echo ""
+
+echo "========================================================================================"
+echo "=== END HEALTH CHECK ==="
+echo "========================================================================================"
