@@ -1,13 +1,15 @@
-# Dockerfile for Token Visualizer (Full Reflex App)
+# Dockerfile for Token Visualizer (Single Container with Nginx)
 FROM python:3.12-slim
 
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies and uv
+# Install system dependencies, uv, and nginx
 RUN apt-get update && apt-get install -y \
     curl \
     unzip \
+    nginx \
+    supervisor \
     && rm -rf /var/lib/apt/lists/* \
     && curl -LsSf https://astral.sh/uv/install.sh | sh
 
@@ -23,50 +25,21 @@ RUN uv sync --no-dev
 # Copy application code
 COPY . .
 
-# Dockerfile for Token Visualizer (Full Reflex App)
-FROM python:3.12-slim
-
-# Set working directory
-WORKDIR /app
-
-# Install system dependencies and uv
-RUN apt-get update && apt-get install -y \
-    curl \
-    unzip \
-    && rm -rf /var/lib/apt/lists/* \
-    && curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# Add uv to PATH
-ENV PATH="/root/.local/bin:$PATH"
-
-# Copy project files
-COPY pyproject.toml uv.lock* ./
-
-# Install Python dependencies using uv
-RUN uv sync --no-dev
-
-# Copy application code
-COPY . .
-
-# Initialize Reflex
+# Initialize Reflex and build frontend
 RUN uv run reflex init
+RUN uv run reflex export --frontend-only --no-zip
 
-# Set default environment variables
+# Copy nginx configuration
+COPY nginx.conf /etc/nginx/sites-available/default
+
+# Copy supervisor configuration
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+# Set environment variables
 ENV LLM_SERVICE_URL=http://localhost:8001
 
-# Expose ports for both frontend and backend
-EXPOSE 3000 8000
+# Expose port 80 (nginx will handle routing)
+EXPOSE 80
 
-# Create a simple startup script that runs both processes
-RUN echo '#!/bin/bash' > /start.sh && \
-    echo 'echo "Starting Reflex Token Visualizer..."' >> /start.sh && \
-    echo 'echo "Frontend will be available on port 3000"' >> /start.sh && \
-    echo 'echo "Backend will be available on port 8000"' >> /start.sh && \
-    echo 'echo "Environment variables:"' >> /start.sh && \
-    echo 'echo "  LLM_SERVICE_URL: $LLM_SERVICE_URL"' >> /start.sh && \
-    echo 'echo ""' >> /start.sh && \
-    echo 'exec uv run reflex run --env prod' >> /start.sh && \
-    chmod +x /start.sh
-
-# Run the startup script
-CMD ["/start.sh"]
+# Run supervisor to start both services
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
