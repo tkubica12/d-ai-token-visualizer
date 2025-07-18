@@ -37,11 +37,11 @@ MANIFEST
 .DS_Store
 Thumbs.db
 
-# Model cache (Hugging Face) - but keep our weights directory
+# Model cache (Hugging Face)
 .cache/
 models/
-# Don't ignore our pre-downloaded weights
-!weights/
+*.bin
+*.safetensors
 
 # Logs
 *.log

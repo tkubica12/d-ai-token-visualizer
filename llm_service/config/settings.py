@@ -21,7 +21,6 @@ class LLMServiceSettings(BaseSettings):
     
     # Model configuration - map to environment variable names
     model_name: str = Field(default="google/gemma-2-2b", description="Hugging Face model name", alias="LOCAL_MODEL_NAME")
-    model_path: Optional[str] = Field(default=None, description="Local path to model weights (overrides model_name)", alias="LOCAL_MODEL_PATH")
     device: str = Field(default="auto", description="Device for inference: auto, cuda, cpu", alias="DEVICE")
     quantization: Optional[Literal["Q4", "Q8"]] = Field(default=None, description="Quantization type: None, Q4 (4-bit), or Q8 (8-bit)", alias="QUANTIZATION")
     
