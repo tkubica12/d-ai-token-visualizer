@@ -25,20 +25,8 @@ COPY pyproject.toml uv.lock* ./
 # Install Python dependencies using uv (GPU version)
 RUN uv sync --extra gpu-cuda128 --no-dev
 
-# Install git and git-lfs for downloading model weights
-RUN apt-get update && apt-get install -y \
-    git \
-    git-lfs \
-    && rm -rf /var/lib/apt/lists/* \
-    && git lfs install
-
-# Download Gemma-2-2B model weights directly into the container
-ARG HUGGINGFACE_TOKEN
-ENV HUGGINGFACE_HUB_TOKEN=${HUGGINGFACE_TOKEN}
-RUN mkdir -p ./weights && \
-    cd ./weights && \
-    git clone https://huggingface.co/google/gemma-2-2b . && \
-    rm -rf .git
+# Copy pre-downloaded model weights
+COPY weights/ ./weights/
 
 # Copy application code
 COPY . .
