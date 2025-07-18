@@ -35,11 +35,19 @@ COPY nginx.conf /etc/nginx/sites-available/default
 # Copy supervisor configuration
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
+# Copy startup script
+COPY start.sh /start.sh
+RUN chmod +x /start.sh
+
+# Copy health check script
+COPY health_check.sh /health_check.sh
+RUN chmod +x /health_check.sh
+
 # Set environment variables
 ENV LLM_SERVICE_URL=http://localhost:8001
 
 # Expose port 80 (nginx will handle routing)
 EXPOSE 80
 
-# Run supervisor to start both services
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+# Run startup script
+CMD ["/start.sh"]
