@@ -25,13 +25,16 @@ COPY pyproject.toml uv.lock* ./
 # Install Python dependencies using uv (GPU version)
 RUN uv sync --extra gpu-cuda128 --no-dev
 
+# Copy pre-downloaded model weights
+COPY weights/ ./weights/
+
 # Copy application code
 COPY . .
 
-# Create non-root user
-RUN useradd --create-home --shell /bin/bash appuser && \
-    chown -R appuser:appuser /app
-USER appuser
+# Set environment for local model weights
+ENV LOCAL_MODEL_PATH=./weights
+ENV DEVICE=auto
+ENV USE_QUANTIZATION=false
 
 # Expose port
 EXPOSE 8001

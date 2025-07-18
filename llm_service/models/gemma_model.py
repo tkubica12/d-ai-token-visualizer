@@ -4,6 +4,7 @@ import asyncio
 import math
 import time
 import warnings
+import os
 from typing import List, Dict, Any, Optional, Tuple
 from dataclasses import dataclass
 
@@ -46,6 +47,15 @@ class GemmaModelManager:
         
         # Suppress some warnings for cleaner output
         warnings.filterwarnings("ignore", category=UserWarning)
+    
+    def _get_model_path(self) -> str:
+        """Get the model path, either local or from HuggingFace."""
+        if settings.model_path and os.path.exists(settings.model_path):
+            print(f"🔍 Using local model weights from: {settings.model_path}")
+            return settings.model_path
+        else:
+            print(f"🔍 Using HuggingFace model: {settings.model_name}")
+            return settings.model_name
     
     def _detect_device(self) -> str:
         """Detect the best available device for inference."""
@@ -101,19 +111,29 @@ class GemmaModelManager:
                 return True, "Model already initialized"
             
             try:
-                print(f"🔄 Loading tokenizer: {settings.model_name}")
+                model_path = self._get_model_path()
+                is_local = os.path.exists(model_path)
+                
+                print(f"🔄 Loading tokenizer: {model_path}")
                 # Run in executor to avoid blocking the event loop
                 loop = asyncio.get_event_loop()
                 
-                self.tokenizer = await loop.run_in_executor(
-                    None,
-                    lambda: AutoTokenizer.from_pretrained(
-                        settings.model_name,
-                        token=settings.hf_token
+                # Load tokenizer with or without HF token
+                if is_local:
+                    self.tokenizer = await loop.run_in_executor(
+                        None,
+                        lambda: AutoTokenizer.from_pretrained(model_path, local_files_only=True)
                     )
-                )
+                else:
+                    self.tokenizer = await loop.run_in_executor(
+                        None,
+                        lambda: AutoTokenizer.from_pretrained(
+                            model_path,
+                            token=settings.hf_token
+                        )
+                    )
                 
-                print(f"🔄 Loading model: {settings.model_name}")
+                print(f"🔄 Loading model: {model_path}")
                 self.device = self._detect_device()
                 
                 start_time = time.time()
@@ -121,28 +141,52 @@ class GemmaModelManager:
                 
                 # Load model with or without quantization
                 if quantization_config is not None:
-                    self.model = await loop.run_in_executor(
-                        None,
-                        lambda: AutoModelForCausalLM.from_pretrained(
-                            settings.model_name,
-                            quantization_config=quantization_config,
-                            device_map="auto",
-                            low_cpu_mem_usage=True,
-                            token=settings.hf_token
+                    if is_local:
+                        self.model = await loop.run_in_executor(
+                            None,
+                            lambda: AutoModelForCausalLM.from_pretrained(
+                                model_path,
+                                quantization_config=quantization_config,
+                                device_map="auto",
+                                low_cpu_mem_usage=True,
+                                local_files_only=True
+                            )
                         )
-                    )
+                    else:
+                        self.model = await loop.run_in_executor(
+                            None,
+                            lambda: AutoModelForCausalLM.from_pretrained(
+                                model_path,
+                                quantization_config=quantization_config,
+                                device_map="auto",
+                                low_cpu_mem_usage=True,
+                                token=settings.hf_token
+                            )
+                        )
                 else:
                     # Fallback to standard loading
-                    self.model = await loop.run_in_executor(
-                        None,
-                        lambda: AutoModelForCausalLM.from_pretrained(
-                            settings.model_name,
-                            device_map="auto" if self.device == "cuda" else None,
-                            torch_dtype=torch.float16 if self.device == "cuda" else torch.float32,
-                            low_cpu_mem_usage=True,
-                            token=settings.hf_token
+                    if is_local:
+                        self.model = await loop.run_in_executor(
+                            None,
+                            lambda: AutoModelForCausalLM.from_pretrained(
+                                model_path,
+                                device_map="auto" if self.device == "cuda" else None,
+                                torch_dtype=torch.float16 if self.device == "cuda" else torch.float32,
+                                low_cpu_mem_usage=True,
+                                local_files_only=True
+                            )
                         )
-                    )
+                    else:
+                        self.model = await loop.run_in_executor(
+                            None,
+                            lambda: AutoModelForCausalLM.from_pretrained(
+                                model_path,
+                                device_map="auto" if self.device == "cuda" else None,
+                                torch_dtype=torch.float16 if self.device == "cuda" else torch.float32,
+                                low_cpu_mem_usage=True,
+                                token=settings.hf_token
+                            )
+                        )
                     
                     if self.device == "cpu":
                         self.model = self.model.to(self.device)
@@ -174,10 +218,15 @@ class GemmaModelManager:
     
     def get_model_info(self) -> Dict[str, Any]:
         """Get information about the loaded model."""
+        model_path = self._get_model_path()
+        is_local = os.path.exists(model_path)
+        
         if not self.is_ready():
             return {
                 "status": "not_ready",
                 "model_name": settings.model_name,
+                "model_path": model_path if is_local else None,
+                "is_local": is_local,
                 "device": "unknown",
                 "quantization": settings.quantization
             }
@@ -188,6 +237,8 @@ class GemmaModelManager:
         return {
             "status": "ready",
             "model_name": settings.model_name,
+            "model_path": model_path if is_local else None,
+            "is_local": is_local,
             "device": self.device,
             "quantization": settings.quantization,
             "parameters_billions": round(params_billions, 2),
