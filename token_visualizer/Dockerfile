@@ -65,7 +65,7 @@ RUN echo '#!/bin/bash' > /start.sh && \
     echo 'echo "Environment variables:"' >> /start.sh && \
     echo 'echo "  LLM_SERVICE_URL: $LLM_SERVICE_URL"' >> /start.sh && \
     echo 'echo ""' >> /start.sh && \
-    echo 'exec uv run reflex run --env prod --host 0.0.0.0' >> /start.sh && \
+    echo 'exec uv run reflex run --env prod' >> /start.sh && \
     chmod +x /start.sh
 
 # Run the startup script
