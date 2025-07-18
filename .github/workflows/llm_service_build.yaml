@@ -32,6 +32,8 @@ jobs:
         push: true
         file: llm_service/Dockerfile.cpu
         tags: ghcr.io/${{ github.repository }}/llm_service:cpu
+        build-args: |
+          HUGGINGFACE_TOKEN=${{ secrets.HUGGINGFACE_TOKEN }}
 
     - name: Build and push Docker image GPU
       uses: docker/build-push-action@v6
@@ -40,3 +42,5 @@ jobs:
         push: true
         file: llm_service/Dockerfile.gpu
         tags: ghcr.io/${{ github.repository }}/llm_service:gpu
+        build-args: |
+          HUGGINGFACE_TOKEN=${{ secrets.HUGGINGFACE_TOKEN }}
