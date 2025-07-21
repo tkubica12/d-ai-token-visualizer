@@ -1,0 +1,15 @@
+# Terraform files
+*.tfvars
+*.auto.tfvars
+.terraform/
+.terraform.lock.hcl
+terraform.tfstate
+terraform.tfstate.backup
+*.tfplan
+
+# Sensitive configuration files
+demo.auto.tfvars
+
+# OS files
+.DS_Store
+Thumbs.db

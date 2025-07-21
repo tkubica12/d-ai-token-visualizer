@@ -1,0 +1,4 @@
+# Copy this file to terraform.tfvars and fill in your values
+huggingface_token = "your-huggingface-token-here"
+location          = "swedencentral"
+environment       = "dev"
